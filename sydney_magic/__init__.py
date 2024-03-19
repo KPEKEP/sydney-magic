@@ -19,7 +19,7 @@ os.environ["BING_COOKIES"] = "<your-cookies>"
 
 or, using the helper:
 
-from sydney_magic import helper_set_cookie
+from sydney_magic.sydney_magic import helper_set_cookie
 helper_set_cookie("<your-cookies>")
 ''')
         

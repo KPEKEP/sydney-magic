@@ -1,9 +1,20 @@
 from setuptools import setup, find_packages
 
+with open('README.md', 'rt') as f:
+    readme = f.read().strip()
+
+package_name = 'sydney_magic'
+version = '0.23'
+ext = 'tar.gz'
+
 setup(
-    name='sydney_magic',
-    version='0.20',
+    name=package_name,
+    url="https://github.com/KPEKEP/sydney-magic/", 
+    download_url='https://github.com/KPEKEP/sydney-magic/{0}-{1}{2}'.format(package_name, version, ext),
+    version=version,
     packages=find_packages(),
+    long_description=readme,
+    long_description_content_type="text/markdown",
     install_requires=[
         'IPython',
         'sydney-py',
