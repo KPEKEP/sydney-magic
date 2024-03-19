@@ -11,7 +11,12 @@ Sydney Magic is an IPython extension that provides line and cell magics for inte
 
 ## Installation
 
-To install Sydney Magic, follow these steps:
+To install Sydney Magic from pip:
+```bash
+pip install sydney-magic
+```
+
+To install Sydney Magic from code, follow these steps:
 
 1. Clone this repository or download the source code.
 2. Navigate to the directory containing `setup.py`.
