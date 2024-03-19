@@ -2,6 +2,8 @@
 
 Sydney Magic is an IPython extension that provides line and cell magics for interacting with [Sydney.py](https://github.com/vsakkas/sydney.py), an unofficial Python client for Copilot (formerly named Bing Chat), also known as Sydney. This extension allows users to easily use Copilot's capabilities directly within IPython notebooks or shells.
 
+![image](https://github.com/KPEKEP/sydney-magic/assets/2512552/b4809281-85b5-4f11-924c-a1a9104efc4a)
+
 ## Features
 
 - Ask questions or make requests to Copilot with `%sydney ask "<prompt>"`.
