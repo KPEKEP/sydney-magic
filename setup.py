@@ -4,7 +4,7 @@ with open('README.md', 'rt') as f:
     readme = f.read().strip()
 
 package_name = 'sydney_magic'
-version = '0.25'
+version = '0.27'
 ext = 'tar.gz'
 
 setup(
