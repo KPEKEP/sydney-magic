@@ -1,4 +1,5 @@
 from IPython.core.magic import register_line_cell_magic
+import ipynbname
 import asyncio
 from sydney import SydneyClient
 from sydney.exceptions import (
@@ -14,6 +15,9 @@ from sydney.exceptions import (
 import os
 import nest_asyncio
 import shlex
+import sys
+import traceback
+import nbformat
 
 nest_asyncio.apply()
 
@@ -34,7 +38,27 @@ class SydneyMagic:
             elif command.startswith("compose"):
                 async for response in self.client.compose_stream(command[8:], **kwargs):
                     print(response, end="", flush=True)
+            elif command.startswith("explain"):
+                code = get_notebook_code()
+                query = f'Explain the code and how it works. Code:\n{code}'                
+                async for response in self.client.ask_stream(query, 
+                                                                 **kwargs):
+                    print(response, end="", flush=True)                
+            elif command.startswith("error"):
+                error = get_last_error()
+                code = get_notebook_code()
+                if not error:
+                    print("There is no error to explain.")
+                    return
+                
+                query = f'Explain the error and how to fix it. Code:\n{code}\nError:\n{error}'    
+                
+                async for response in self.client.ask_stream(query, 
+                                                                 **kwargs):
+                    print(response, end="", flush=True)                
+
             else:
+                print(command)
                 print("Command not recognized. Use 'help' for more information.")
         except ConversationLimitException:
             print("Warning: Reached conversation limit. Resetting conversation and continuing.")
@@ -63,7 +87,7 @@ class SydneyMagic:
 
     def print_help(self):
         help_text = """
-        Use `%sydney [command]` for line magic or `%%sydney [command]` for cell magic.
+        !!Use `%sydney [command]` for line magic or `%%sydney [command]` for cell magic.
         Commands:
           - ask [prompt]: Ask a question or make a request to Copilot.
               Options:
@@ -79,6 +103,8 @@ class SydneyMagic:
               --length=[short|medium|long]: Set the length for composition.
               --suggestions: Include suggested responses.
               --raw=[True|False]: Get raw JSON response.
+          - explain: Explain the current notebook code.
+          - error: Explain the last occured error.
         Example:
           `%sydney ask "What is Python?" --citations`
         """
@@ -92,21 +118,6 @@ class SydneyMagic:
 sydney_magic_instance = SydneyMagic()
 
 def sydney(line, cell=None):
-    if line.strip() == "help" or cell and cell.strip() == "help":
-        sydney_magic_instance.print_help()
-        return
-    try:
-        if cell:
-            commands = cell.split('\n')
-            for command in commands:
-                sydney_magic_instance.loop.run_until_complete(sydney_magic_instance._run_sydney_command(command))
-        else:
-            sydney_magic_instance.loop.run_until_complete(sydney_magic_instance._run_sydney_command(line))
-    finally:
-        sydney_magic_instance.loop.run_until_complete(sydney_magic_instance.close_client())
-
-
-def sydney(line, cell=None):
     if line.strip() == "help" or (cell and cell.strip() == "help"):
         sydney_magic_instance.print_help()
         return
@@ -115,13 +126,11 @@ def sydney(line, cell=None):
     kwargs = {}
     try:
         if cell:
-            # Process each line in the cell
-            commands = cell.split('\n')
-            for command in commands:
-                # Split command into arguments
-                args = shlex.split(command)
-                command, kwargs = parse_arguments(args)
-                sydney_magic_instance.loop.run_until_complete(sydney_magic_instance._run_sydney_command(command, **kwargs))
+            # Split command into arguments
+            args = shlex.split(line)
+            command, kwargs = parse_arguments(args)
+            command_call = f'{command} "{cell}"'
+            sydney_magic_instance.loop.run_until_complete(sydney_magic_instance._run_sydney_command(command_call, **kwargs))
         else:
             # Split line into arguments
             args = shlex.split(line)
@@ -150,3 +159,33 @@ def helper_set_cookie(cookie):
     Set env var for the cookie needed for sydney-py
     '''
     os.environ["BING_COOKIES"] = cookie
+
+def get_last_error():
+    # Check if there is any exception information available
+    if hasattr(sys, 'last_type') and hasattr(sys, 'last_value') and hasattr(sys, 'last_traceback'):
+        # Extract the exception type, value, and traceback
+        exc_type, exc_value, exc_traceback = sys.last_type, sys.last_value, sys.last_traceback
+        # Format the traceback and exception message
+        error_message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+        return error_message
+    else:
+        return False
+
+def get_notebook_name():
+    return ipynbname.path()
+    
+def get_notebook_code():
+    # Load the notebook
+    with open(get_notebook_name(), 'r', encoding='utf-8') as nb_file:
+        nb_contents = nbformat.read(nb_file, as_version=4)
+    
+    # Initialize an empty string to store code
+    all_code = ""
+    
+    # Iterate through all cells in the notebook
+    for cell in nb_contents['cells']:
+        if cell['cell_type'] == 'code':
+            # Append the code from the current cell to the all_code string
+            all_code += cell['source'] + "\n\n"
+    
+    return all_code

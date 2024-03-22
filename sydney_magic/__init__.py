@@ -1,4 +1,4 @@
-from .sydney_magic import sydney
+from .sydney_magic import sydney, get_notebook_name
 import os
 def load_ipython_extension(ipython):
     if len(os.environ.get("BING_COOKIES", ""))<1:

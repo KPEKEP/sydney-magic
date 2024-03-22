@@ -4,7 +4,7 @@ with open('README.md', 'rt') as f:
     readme = f.read().strip()
 
 package_name = 'sydney_magic'
-version = '0.23'
+version = '0.25'
 ext = 'tar.gz'
 
 setup(
@@ -18,7 +18,8 @@ setup(
     install_requires=[
         'IPython',
         'sydney-py',
-        'nest_asyncio'
+        'nest_asyncio',
+        'ipynbname',
     ],
     author='Pavel Nakaznenko',
     author_email='p.nakaznenko@gmail.com',
